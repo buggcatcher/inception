@@ -49,9 +49,9 @@
 
 ---
 
-## ⚠️ Attenzione: Guide online non sempre conformi al subject
+## Guide online
 
-Durante la ricerca potresti imbatterti in guide scritte da altri studenti, come ad esempio queste due:
+Ecco un buon punto di partenza:
 
 - [Inception Guide – Part I (Medium)](https://medium.com/@ssterdev/inception-guide-42-project-part-i-7e3af15eb671)
 - [Inception Guide – Part II (Medium)](https://medium.com/@ssterdev/inception-42-project-part-ii-19a06962cf3b)
@@ -75,8 +75,6 @@ Di seguito una tabella riassuntiva dei principali problemi riscontrati in quelle
 
 
 La strada per diventare *master* di Docker è proprio questa: saper distinguere una guida utile da una fuorviante, e saper correggere il tiro in autonomia.
-
-Buon lavoro, e ricorda: **Inception si vince capendo ogni riga del Dockerfile, ogni flag di `docker run` e ogni dettaglio del `docker-compose.yml`.** 💪
 
 
 *This is AI-generated, for reference only.*
