@@ -46,3 +46,39 @@
 *   **[GNU Make Manual](https://www.gnu.org/software/make/manual/)**: Per scrivere un Makefile solido con i target `all`, `up`, `down`, `clean`, `fclean`, `re`. Dovrà creare le directory dei volumi (es. `/home/login/data/wordpress`, `/home/login/data/mariadb`) e lanciare il `docker-compose up --build -d`.
 *   **[Docker and the PID 1 Zombie Reaping Problem](https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/)**: (Non ufficiale ma fondamentale). Capire perché i container non sono VM e perché servono processi in foreground. Il processo con PID 1 deve gestire i segnali (`SIGTERM`) e i figli zombie. Spiega perché uno script di entrypoint deve terminare con `exec` per rimpiazzare la shell con il processo principale (es. `exec nginx -g 'daemon off;'`).
 *   **[Official Docker Build Secrets Guide](https://www.hostinger.com/tutorials/docker-build-secrets)**: Una guida che spiega le best practice per non usare `ENV` o `ARG` per le password nei Dockerfile. Include la gestione dei segreti di build, utile se devi autenticarti per scaricare pacchetti durante la fase di `docker build` ed evitare che le credenziali rimangano nell'immagine finale.
+
+---
+
+## ⚠️ Attenzione: Guide online non sempre conformi al subject
+
+Durante la ricerca potresti imbatterti in guide scritte da altri studenti, come ad esempio queste due:
+
+- [Inception Guide – Part I (Medium)](https://medium.com/@ssterdev/inception-guide-42-project-part-i-7e3af15eb671)
+- [Inception Guide – Part II (Medium)](https://medium.com/@ssterdev/inception-42-project-part-ii-19a06962cf3b)
+
+Queste guide contengono **spunti utili** (es. l'uso di `wp-cli`, la struttura delle cartelle `requirements/`), ma **presentano diverse incongruenze** rispetto al subject ufficiale di 42. Seguirle senza correzioni può portare a una valutazione negativa.
+
+Di seguito una tabella riassuntiva dei principali problemi riscontrati in quelle guide, con le relative correzioni richieste dal progetto.
+
+| 📌 Problema nella guida Medium | Cosa dice/suggerisce la guida | ✅ Cosa richiede il subject ufficiale |
+|-------------------------------|-------------------------------|----------------------------------------|
+| **TLS/HTTPS assente** | “I will not cover TLS encryption in this guide for now” – nessuna configurazione di HTTPS. | **Obbligatorio**: NGINX deve ascoltare solo sulla **porta 443** con **TLSv1.2 o TLSv1.3**. |
+| **Bind mount per i file di WordPress** | Usa `./web:/var/www/html` (bind mount). | **Vietato** per i volumi persistenti. Vanno usati **named volumes** (es. `wordpress_files`). |
+| **Percorso dei volumi non conforme** | Non specifica il percorso `/home/login/data`. | I named volumes devono essere mappati su `/home/login/data/wordpress` e `/home/login/data/mariadb` tramite `driver_opts`. |
+| **Password in chiaro nel docker-compose.yml** | Scrive `MYSQL_PASSWORD=password` direttamente nel file YAML. | **Vietato**. Le credenziali vanno nel file `.env` (ignorato da git) o in Docker secrets. |
+| **Nessun volume named per il database** | Non definisce un volume esplicito per MariaDB. | **Obbligatorio**: volume named separato per i dati del database (`mariadb_data`). |
+| **Assenza di `restart` policy** | Non specifica alcuna politica di riavvio. | Richiesto: *“Your containers have to restart in case of a crash”* → `restart: unless-stopped` o `always`. |
+| **Uso di `docker cp` per estrarre configurazioni** | Copia file da container in esecuzione per modificarli. | Non vietato, ma **pessima pratica**. I file di configurazione vanno creati manualmente nella cartella `conf/` e copiati nel Dockerfile. |
+| **Nessun file `.env`** | Tutte le variabili sono scritte inline. | **Obbligatorio** usare un file `.env` separato per ambiente e segreti. |
+| **Mancata gestione del PID 1 e foreground** | Usa `mysqld_safe` (che demonizza) e non educa su `exec`. | **Vietato ogni hack** (`tail -f`, `sleep infinity`, demonizzare). Tutti i servizi devono partire **in foreground** (es. `nginx -g 'daemon off;'`, `php-fpm -F`, `mysqld` senza `--daemonize`). |
+| **Nessuna verifica di readiness tra servizi** | Affida tutto a `depends_on`, che non garantisce che MariaDB sia pronto. | È necessario implementare un **wait loop** nello script di entrypoint di WordPress (es. `while ! nc -z mariadb 3306; do sleep 1; done`). |
+
+---
+
+### 💡 Consiglio finale
+
+Usa le guide online solo come **ispirazione** per capire il flusso generale o per vedere come altri hanno strutturato i propri script. **Non copiarle mai alla lettera** senza verificare ogni singolo punto con il subject ufficiale e con le best practices elencate nella sezione precedente.
+
+La strada per diventare *master* di Docker è proprio questa: saper distinguere una guida utile da una fuorviante, e saper correggere il tiro in autonomia.
+
+Buon lavoro, e ricorda: **Inception si vince capendo ogni riga del Dockerfile, ogni flag di `docker run` e ogni dettaglio del `docker-compose.yml`.** 💪
