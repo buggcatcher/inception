@@ -2,7 +2,7 @@
 ## Risorse Ufficiali per Inception
 
 ### 📜 Il Progetto
-*   **[Subject Ufficiale di Inception (42)](https://cdn.intra.42.fr/pdf/pdf/113186/en.subject.pdf)**: La "bibbia" del progetto. Leggilo più e più volte, ogni dettaglio è importante. Contiene tutti i requisiti fondamentali, dalla struttura delle directory ai divieti sull'uso di `latest` e `--link`.
+*   **[Subject Ufficiale di Inception (42)](https://cdn.intra.42.fr/pdf/pdf/202754/en.subject.pdf)**: La "bibbia" del progetto. Leggilo più e più volte, ogni dettaglio è importante. Contiene tutti i requisiti fondamentali, dalla struttura delle directory ai divieti sull'uso di `latest` e `--link`.
 
 ---
 
