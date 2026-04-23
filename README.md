@@ -73,12 +73,10 @@ Di seguito una tabella riassuntiva dei principali problemi riscontrati in quelle
 | **Mancata gestione del PID 1 e foreground** | Usa `mysqld_safe` (che demonizza) e non educa su `exec`. | **Vietato ogni hack** (`tail -f`, `sleep infinity`, demonizzare). Tutti i servizi devono partire **in foreground** (es. `nginx -g 'daemon off;'`, `php-fpm -F`, `mysqld` senza `--daemonize`). |
 | **Nessuna verifica di readiness tra servizi** | Affida tutto a `depends_on`, che non garantisce che MariaDB sia pronto. | È necessario implementare un **wait loop** nello script di entrypoint di WordPress (es. `while ! nc -z mariadb 3306; do sleep 1; done`). |
 
----
-
-### 💡 Consiglio finale
-
-Usa le guide online solo come **ispirazione** per capire il flusso generale o per vedere come altri hanno strutturato i propri script. **Non copiarle mai alla lettera** senza verificare ogni singolo punto con il subject ufficiale e con le best practices elencate nella sezione precedente.
 
 La strada per diventare *master* di Docker è proprio questa: saper distinguere una guida utile da una fuorviante, e saper correggere il tiro in autonomia.
 
 Buon lavoro, e ricorda: **Inception si vince capendo ogni riga del Dockerfile, ogni flag di `docker run` e ogni dettaglio del `docker-compose.yml`.** 💪
+
+
+*This is AI-generated, for reference only.*
