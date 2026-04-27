@@ -1,0 +1,20 @@
+File / Directory	Scopo
+
+Makefile		Punto di ingresso. Crea le cartelle dei volumi sull’host (/home/login/data/...),
+			lancia docker compose up --build -d, ferma e pulisce.
+
+.env			Variabili d’ambiente (nomi utente, password, dominio). Non committato (.gitignore).
+
+docker-compose.yml	Definisce i servizi, la rete, i volumi named (con driver local mappato su /home/login/data),
+			le variabili d’ambiente, le dipendenze (depends_on), la politica di restart.
+
+requirements/*/Dockerf..Costruisce l’immagine per quel servizio partendo da Alpine. Installa i pacchetti, 
+			copia configurazioni e script, imposta il comando di avvio (o entrypoint).
+
+conf/*.conf		File di configurazione specifici per nginx, php-fpm, mariadb. 
+			Vengono copiati nel container durante il build.
+
+tools/*.sh		Script di entrypoint o di utilità (es. attesa del database, generazione certificati, 
+			installazione WordPress). Devono terminare con exec per sostituire la shell.
+
+.dockerignore		Esclude file locali dal contesto di build, velocizzando e pulendo l’immagine.
