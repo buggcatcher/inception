@@ -17,10 +17,11 @@
 
 ---
 
-### 🐧 Alpine Linux (Base OS Obbligatoria)
 
-*   **[Alpine Package Keeper (`apk`)](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper)**: La guida al package manager di Alpine. Usare `apk add --no-cache` nei Dockerfile è fondamentale per mantenere le immagini leggere e senza lasciare tracce di cache inutili. L'uso di `--no-cache` evita il layer intermedio di `apk update`, rendendo l'immagine più pulita.
-*   **[Alpine Linux Releases](https://alpinelinux.org/releases/)**: Per scegliere la **penultimate stable version** richiesta dal progetto. Esempio: se l'ultima stabile è la 3.21, userai la 3.20.
+### 🐧 Debian Linux (Base OS Consigliata)
+
+*   **[APT Package Manager (`apt`)](https://wiki.debian.org/Teams/Apt)**: La guida al package manager di Debian. Usare `apt-get update` seguito da `apt-get install -y` nei Dockerfile è fondamentale per installare pacchetti in modo pulito. Ricorda di eseguire `apt-get clean` e rimuovere `/var/lib/apt/lists/*` per mantenere l'immagine leggera e senza cache inutili.
+*   **[Debian Releases](https://www.debian.org/releases/)**: Per scegliere la **penultima versione stabile** richiesta dal progetto. Ad esempio, se l'ultima stabile è la 12 (bookworm), userai la 11 (bullseye).
 
 ---
 
@@ -37,7 +38,7 @@
     GRANT ALL PRIVILEGES ON wordpress.* TO 'wpuser'@'%';
     FLUSH PRIVILEGES;
     ```
-*   **[How to Use the Command 'apk' (with Examples)](https://commandmasters.com/commands/apk-common/)**: Un riferimento pratico e veloce per i comandi `apk` più comuni, come `apk add`, `apk del`, `apk update`, `apk search`, `apk info` e altri utili durante la scrittura del Dockerfile.
+*   **[How to Use the Command 'apt' (with Examples)](https://www.cyberciti.biz/faq/debian-ubuntu-linux-apt-get-command-examples/)**: Un riferimento pratico e veloce per i comandi `apt` più comuni, come `apt-get install`, `apt-get remove`, `apt-get update`, `apt-cache search`, `apt-cache show` e altri utili durante la scrittura del Dockerfile.
 
 ---
 
