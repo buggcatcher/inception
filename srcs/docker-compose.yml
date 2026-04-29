@@ -21,8 +21,8 @@ version: '3.8'
 # una cosa che mi servirá invece é `$VAR` che una variabile d'ambiente che viene
 # sostituita da un valore preso dall' .env o dall'ambiente della shell.
 # attenzione: se utilizzo piú docker compose e faccio il merge di piú file .yaml
-#             mappe/dizionari verranno sovrascritti dal file sucessivo mentre le
-#             liste vengono aggiunte (e non sovrascritte)
+# mappe/dizionari verranno sovrascritti dal file sucessivo mentre le
+# liste vengono aggiunte (e non sovrascritte)
 
 services:
   nginx:
