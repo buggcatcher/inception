@@ -1,3 +1,8 @@
+Attraverso comandi come `docker build` e `docker compose` dico a docker cosa usare e dove trovarlo. I seguenti file servono proprio a questo. Il demone `dockerd` gira sulla macchina e io gli posso invia re comanti attraverso il terminale i cui percorsi sono relativi al mio filesystem.
+Guarda il subject per i certificati (tls).
+Non ci sono cartelle con nomi speciali o che devo usare per forza ma posso usare /src, /tool e /conf per aiutarmi a organizzare i file.
+Attenzione: i volumi possono puntare a posizioni che non sono nella struttura del progetto, bensí a una qualche posizione assoluta dell'host.
+
 File / Directory	Scopo
 
 Makefile		Punto di ingresso. Crea le cartelle dei volumi sull’host (/home/login/data/...),

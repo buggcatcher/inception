@@ -75,7 +75,82 @@ Di seguito una tabella riassuntiva dei principali problemi riscontrati in quelle
 | **Nessuna verifica di readiness tra servizi** | Affida tutto a `depends_on`, che non garantisce che MariaDB sia pronto. | È necessario implementare un **wait loop** nello script di entrypoint di WordPress (es. `while ! nc -z mariadb 3306; do sleep 1; done`). |
 
 
-La strada per diventare *master* di Docker è proprio questa: saper distinguere una guida utile da una fuorviante, e saper correggere il tiro in autonomia.
+---
+
+## keywords fondamentali
+Dockerfile:
+
+    FROM, RUN, COPY, WORKDIR, EXPOSE, CMD / ENTRYPOINT con forma exec.
+
+    USER per non usare root.
+
+    ARG / ENV (ma mai per password).
+
+Docker Compose:
+
+    build, image, container_name, ports, volumes (named), networks, depends_on, restart, env_file, environment.
+
+    driver_opts per mappare i volumi su /home/login/data.
+
+## altre keywords
+
+Di seguito quattro tabelle concise e leggibili per riferirsi rapidamente alle istruzioni/chiavi e alle buone pratiche da usare nei Dockerfile e in `docker-compose.yml` per il progetto Inception.
+
+**Dockerfile — Istruzioni principali**
+
+| Keyword | Cosa fa | Esempio (Inception) |
+|---|---|---|
+| FROM | Definisce l'immagine base (prima istruzione). | `FROM debian:11-slim` |
+| RUN | Esegue comandi durante la build, crea layer. | `RUN apt-get update && apt-get install -y nginx` |
+| COPY | Copia file dalla build context all'immagine. | `COPY conf/nginx.conf /etc/nginx/` |
+| WORKDIR | Imposta la working directory per i comandi successivi. | `WORKDIR /var/www/html` |
+| EXPOSE | Documenta la porta su cui il servizio ascolta. | `EXPOSE 443` |
+| ENV / ARG | ENV persiste nel container, ARG solo in build. Evitare per password. | `ARG DEBIAN_FRONTEND=noninteractive` |
+| USER | Cambia l'utente per esecuzione (non usare root). | `USER www-data` |
+| CMD / ENTRYPOINT | CMD è il comando di default; ENTRYPOINT per script d'init. Usare forma exec e avviare processi in foreground. | `ENTRYPOINT ["/usr/local/bin/wp-setup.sh"]` |
+| VOLUME | Dichiara punti di mount per dati persistenti. | `VOLUME /var/lib/mysql` |
+| HEALTHCHECK | Controllo di salute del container. | `HEALTHCHECK CMD curl -f https://localhost/ || exit 1` |
+| LABEL | Metadati dell'immagine. | `LABEL maintainer="login@42.fr"` |
+
+**Docker Compose — Chiavi principali**
+
+| Keyword | Cosa fa | Esempio (Inception) |
+|---|---|---|
+| build / context / dockerfile | Definisce il contesto di build e il Dockerfile. | `build: { context: ./nginx, dockerfile: Dockerfile }` |
+| image | Nome e tag dell'immagine da usare o generare. | `image: nginx:inception` |
+| container_name | Assegna un nome leggibile al container. | `container_name: inception_nginx` |
+| ports | Espone porte host:container. | `- "443:443"` |
+| volumes | Monta volumi (usare named volumes per persistenza). | `- wordpress_files:/var/www/html` |
+| networks | Collega servizi a reti specifiche. | `networks: - inception` |
+| environment / env_file | Variabili d'ambiente; usare `.env` (ignorato da git). | `env_file: - .env` |
+| depends_on / restart | Dipendenze d'avvio; restart policy richiesta. | `depends_on: - mariadb\nrestart: unless-stopped` |
+| command / entrypoint | Sovrascrive CMD/ENTRYPOINT del Dockerfile. | `command: ["nginx","-g","daemon off;"]` |
+| healthcheck | Definisce test di salute per il servizio. | `healthcheck: { test: ["CMD","curl","-f","http://localhost"], interval: 30s }` |
+| logging | Configura driver e limiti dei log. | `logging: { driver: "json-file", options: { max-size: "10m" } }` |
+
+**Volumi Named & Reti**
+
+| Oggetto | Cosa fa | Esempio / Nota |
+|---|---|---|
+| volumes (driver) | Definisce named volumes e driver (default `local`). | `volumes:\n  wordpress_files:` |
+| driver_opts | Mappa il volume su percorso host richiesto da Inception. | `driver_opts: { type: none, device: /home/login/data/wordpress, o: bind }` |
+| external | Indica che il volume è gestito esternamente. | `external: false` |
+| networks (driver / ipam) | Configura tipo di rete e subnet opzionale. | `driver: bridge` |
+| secrets / configs | Segreti montati come file read-only; configs per file non sensibili. | `secrets: { db_password: { file: ./secrets/db_password.txt } }` |
+
+**Buone pratiche e note rapide**
+
+| Argomento | Perché importante | Suggerimento rapido |
+|---|---|---|
+| Processi in foreground | Evita che i container si arrestino; rispetta PID 1. | Usare `exec` e avviare i servizi senza demonizzare (es. `nginx -g 'daemon off;'`). |
+| Named volumes & percorso | Persistenza e conformità con il subject. | Mappare su `/home/login/data/...` con `driver_opts`. |
+| Segreti vs .env | Evita credenziali in chiaro nel repo o in Dockerfile. | Usare Docker secrets o `.env` ignorato da git; non usare `ENV` per password. |
+| Evitare `latest` | `latest` causa incoerenze e valutazione negativa. | Usare tag espliciti e la penultima release richiesta. |
+| Readiness tra servizi | `depends_on` non garantisce readiness (solo avvio). | Implementare wait loops nello entrypoint (es. `while ! nc -z mariadb 3306; do sleep 1; done`). |
+| PID 1 e reaping | PID 1 deve gestire segnali e figli zombie. | Terminare entrypoint con `exec` per rimpiazzare la shell. |
+
+
+
 
 
 *This is AI-generated, for reference only.*

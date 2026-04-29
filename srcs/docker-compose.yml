@@ -1,0 +1,81 @@
+# Yet Another Markup Language
+
+# versione del formato Compose (da vedere quale viene richiesta da subject)
+version: '3.8'
+
+# la gerarchia é definita dall'indentazione (il tab é vietato, usa due spazi per livello)
+# compose é molto preciso sul tipo di dato che si aspetta. 
+# il formato da seguire é: `key: value`
+# ad esempio su `container_name` e `image` docker si aspetta una stringa,
+# su `ports` e `depends_on` una lista,
+# su `enviroinment` una mappa o una lista.
+# per le stringhe posso usare o meno le virgollette, sia singole che doppie
+# sono obbligatorie invece se la stringa contiene `: `, se inizia con `0x` o pe i valori booleani come "true" oppure "false"
+# `null` si scrive `null`, `~` oppure (vuoto)
+# posso usare `|` per le strighe multilinea.
+# posso usare `>` per unire le righe in una stringa con spazi
+# posso usare ancoraggi `&` e alias `*` per non ripetermi troppo 
+# qualsiasi chiave che inizia con `x-` é ignorata da docker e la posso 
+# usare come variabile interna (difficilmente mi servirper questo progetto)
+# posso separare piú documenti .yaml con `---` (anche questo non mi servirá)
+# una cosa che mi servirá invece é `$VAR` che una variabile d'ambiente che viene
+# sostituita da un valore preso dall' .env o dall'ambiente della shell.
+# attenzione: se utilizzo piú docker compose e faccio il merge di piú file .yaml
+#             mappe/dizionari verranno sovrascritti dal file sucessivo mentre le
+#             liste vengono aggiunte (e non sovrascritte)
+
+services:
+  nginx:
+    build: ./requirements/nginx
+    container_name: nginx
+    ports:
+      - "443:443"
+    volumes:
+      - wordpress_files:/var/www/html
+    networks:
+      - inception
+    restart: unless-stopped
+    env_file:
+      - ../.env
+
+  wordpress:
+    build: ./requirements/wordpress
+    container_name: wordpress
+    volumes:
+      - wordpress_files:/var/www/html
+    networks:
+      - inception
+    depends_on:
+      - mariadb
+    restart: unless-stopped
+    env_file:
+      - ../.env
+
+  mariadb:
+    build: ./requirements/mariadb
+    container_name: mariadb
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - inception
+    restart: unless-stopped
+    env_file:
+      - ../.env
+
+volumes:
+  wordpress_files:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/${USER}/data/wordpress
+      o: bind
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/${USER}/data/mariadb
+      o: bind
+
+networks:
+  inception:
+    driver: bridge
