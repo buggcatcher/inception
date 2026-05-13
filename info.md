@@ -73,6 +73,116 @@ un'altra buona pratica é tenere i file .conf sotto versionamento con git separa
         Alcuni script avanzati catturano SIGTERM per fermare il servizio pulitamente
 
 
+# da leggere e aproffondire:
+deepseek consiglia:
 
+Nel tuo `docker-compose.yml` userai:
+```yaml
+volumes:
+  wp_data:
+  db_data:
 
+services:
+  wordpress:
+    volumes:
+      - wp_data:/var/www/html
+  mariadb:
+    volumes:
+      - db_data:/var/lib/mysql
+```
+
+## ⚙️ File .conf in Inception
+
+Ogni servizio avrà i suoi file di configurazione `.conf`:
+
+- **NGINX** → `nginx.conf` o un file in `conf.d/` (es. `wordpress.conf`).  
+  Dovrai configurare il `server_name`, `root`, `fastcgi_pass` a WordPress, e abilitare TLS.
+
+- **MariaDB** → `50-server.cnf` o `my.cnf` – puoi personalizzare bind-address, caratteri, etc.
+
+- **PHP-FPM** → `www.conf` o `php.ini` – per impostare `upload_max_filesize`, `memory_limit`, etc.
+
+Di solito in Inception si **copiano** questi file nell’immagine con `COPY`, perché le regole sono fisse.  
+Ma per seguire le best practice, puoi anche usarli come **bind mount** durante lo sviluppo per iterare velocemente.
+
+## 🐚 Script di avvio (entrypoint)
+
+Quasi ogni container in Inception avrà bisogno di **uno script** per "far funzionare le cose". Ecco cosa farà tipicamente:
+
+### Per WordPress (PHP-FPM)
+- Attendere che MariaDB sia pronto (es. con `wp-cli` o `nc -z`)
+- Configurare `wp-config.php` con le variabili d’ambiente (DB_NAME, DB_USER, DB_PASSWORD, DB_HOST)
+- Installare WordPress se non già presente (usando `wp core install`)
+- Installare temi/plugin (opzionale)
+- Infine lanciare `php-fpm8.2 -F`
+
+### Per MariaDB
+- Lo script ufficiale `docker-entrypoint.sh` già fa tutto: inizializza il DB se il volume è vuoto, esegue script in `/docker-entrypoint-initdb.d/`.  
+  Spesso non serve scriverne uno da zero, ma puoi aggiungere uno script personalizzato che imposta privilegi o crea DB extra.
+
+### Per NGINX
+- Di solito non serve script (basta `CMD ["nginx", "-g", "daemon off;"]`).  
+  Se vuoi ricaricare la configurazione a caldo o generare certificati SSL all’avvio, puoi usare un entrypoint.
+
+### Esempio di entrypoint per WordPress (semplificato)
+```bash
+#!/bin/sh
+set -e
+
+# Attesa db
+while ! nc -z mariadb 3306; do
+  echo "Waiting for MariaDB..."
+  sleep 2
+done
+
+# Configura wp-config.php se non esiste
+if [ ! -f /var/www/html/wp-config.php ]; then
+  wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbpass="$DB_PASSWORD" --dbhost="$DB_HOST" --allow-root
+fi
+
+# Installa WP se non già installato
+if ! wp core is-installed --allow-root; then
+  wp core install --url="$WP_URL" --title="$WP_TITLE" --admin_user="$WP_ADMIN_USER" --admin_password="$WP_ADMIN_PASS" --admin_email="$WP_ADMIN_EMAIL" --allow-root
+fi
+
+exec php-fpm8.2 -F
+```
+
+## 🚫 .dockerignore e .gitignore in Inception
+
+Avrai una struttura come:
+```
+inception/
+├── srcs/
+│   ├── docker-compose.yml
+│   ├── .env
+│   ├── requirements/
+│   │   ├── nginx/
+│   │   │   ├── Dockerfile
+│   │   │   ├── conf/nginx.conf
+│   │   ├── wordpress/
+│   │   │   ├── Dockerfile
+│   │   │   ├── conf/wp-config.php
+│   │   │   ├── tools/entrypoint.sh
+│   │   └── mariadb/
+│   │       ├── Dockerfile
+│   │       └── conf/my.cnf
+├── Makefile
+├── .gitignore
+├── .dockerignore
+```
+
+- **.gitignore** → escludi `.env` (se contiene password), `*.log`, `data/` (se fai backup locali), eventuali volumi locali.
+- **.dockerignore** → escludi `.git`, `README.md`, `.env` (ma attento: le tue immagini potrebbero aver bisogno di `.env`? No, le variabili vanno passate via docker-compose o `--env-file`). Escludi anche `Dockerfile` se lo copi dentro? No, ma escludi file non necessari come `Makefile`, `.gitignore`, etc.
+
+## 🧪 Consigli pratici per Inception
+
+1. **Usa named volumes** per wp_data e db_data – è un requisito esplicito del progetto.
+2. **Non usare bind mount** per i file del tema/plugin se non in fase di sviluppo personale; il progetto chiede che i file siano **copiati nell’immagine** o persistenti nel volume.
+3. **Scrivi entrypoint.sh** per WordPress e per MariaDB (se vuoi inizializzare qualcosa in più).
+4. **Mantieni i file .conf** dentro la cartella `requirements/*/conf/` e copiali nel Dockerfile.
+5. **Usa variabili d’ambiente** per dati sensibili (DB_PASSWORD, ecc.) e caricale da un file `.env` con docker-compose.
+6. **Impara a usare `docker-compose logs -f`** e `docker exec -it` per debug.
+
+Se vuoi, posso aiutarti a scrivere un Dockerfile per uno dei servizi, o a strutturare lo script di entrypoint per WordPress con `wp-cli`. Dimmi pure su quale parte hai più dubbi! 😊
 
