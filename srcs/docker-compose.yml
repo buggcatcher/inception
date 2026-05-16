@@ -69,12 +69,12 @@ volumes:
       type: none
       device: /home/${USER}/data/wordpress
       o: bind
-  mariadb_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/${USER}/data/mariadb
-      o: bind
+  mariadb_data:     # nome del volume usato da MariaDB per salvare i dati in modo persistente
+    driver: local   # usa il driver predefinito di Docker per gestire il volume sul filesystem locale
+    driver_opts:    # opzioni extra del volume: dicono a Docker come collegarlo alla cartella dell'host
+      type: none    # non crea un filesystem nuovo: si appoggia a una directory già esistente
+      device: /home/${USER}/data/mariadb # percorso reale sull'host dove verranno memorizzati i dati
+      o: bind      # monta la directory dell'host come bind mount, quindi i dati restano fuori dal container
 
 networks:
   inception:
